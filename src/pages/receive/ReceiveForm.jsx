@@ -1,47 +1,44 @@
-<<<<<<< HEAD
-import { useEffect, useRef } from "react";
-import { useFormContext } from "react-hook-form";
-import { useState } from "react";
-import FormInput from "../../components/FormInput";
-import APIService from "../../services/APIService";
-import Select from "../../components/Select";
+import React, { useEffect, useRef, useState } from 'react'
+import ReceiveFormDetail from './ReceiveFormDetail'
+import ReceiveConfirm from './ReceiveConfirm';
+import FormTitle from '../../components/FormTitle';
+import Table from '../../components/Table';
+import CustomModal from '../../components/CustomModal';
+import { useForm } from 'react-hook-form';
+import FormInput from '../../components/FormInput';
+import Select from '../../components/Select';
+import APIService from '../../services/APIService';
 
-const ReceiveForm = ({ data, action, dataList, onExists }) => {
-=======
-import React, { useEffect, useRef, useState } from "react";
-import { useForm, FormProvider, set } from "react-hook-form";
-import { useSelector } from "react-redux";
-import { useNavigate, useOutletContext } from "react-router-dom";
-import FormTitle from "../../components/FormTitle";
-import APIService from "../../services/APIService";
-import Select from "../../components/Select";
-import FormInput from "../../components/FormInput";
+
 
 const ReceiveForm = () => {
 
-  const [locationList, setLocationList] = useState([]);
-  const [groupList, setGroupList] = useState([]);
-  const [statusList, setStatusList] = useState([]);
-  const [unitList, setUnitList] = useState([]);
-  // const [packingstatus, setPackingStatus] = useState("");
-  const [planqty, setPlanQty] = useState(0);
-  const [remainqty, setRemainQty] = useState(0);
->>>>>>> 1496d0238286f0535a5a28809f24f3421f218190
-
+  const [locationList, setLocationList] = useState();
+  const [dataList, setDataList] = useState([]);
   const [employeecode, setEmployeeCode] = useState();
-  const [product, setProduct] = useState();
+
   const [location, setLocation] = useState();
-  const [qty, setQty] = useState();
-  const [locationList, setLocationList] = useState([]);
 
-  // system
-  const [auth, setAuth] = useState(useSelector((state) => state.auth));
-  const [userId, setUserId] = useState();
-  const employeeRef = useRef(null);
-  const productRef = useRef(null);
 
+
+  //modal MessageBox
+  // const [content, setContent] = useState({ Id: 0, Name: "" });
+  // const [actionMsgBox, setActionMsgBox] = useState(false);
+  // const [show, setShow] = useState(false);
+  // const [showform, setShowForm] = useState(false);
+  // const [form, setForm] = useState();
+
+  // const [dataSave, setDataSave] = useState();
+  //const [showConfirm, setShowConfirm] = useState(false);
+  // const [actionConfirm, setActionConfirm] = useState(false);
+
+
+  //form
+  // const ref = useRef();
   const effectRan = useRef(false);
-  const navigate = useNavigate();
+
+  //system
+  const employeeRef = useRef(null);
 
   const {
     register,
@@ -56,167 +53,84 @@ const ReceiveForm = () => {
     defaultValues: {
       Id: 0,
       EmployeeCode: "",
-<<<<<<< HEAD
-      Product: "",
-      Location: "",
-      Qty: "",
-=======
-      WorkOrder: "",
       Location: null,
-      Group: null,
-      Status: "",
-      PackingStatusName: "",
-      PpReceiveToShelf: "",
-      ReceivedQty: "",
-      PlanQty: "",
-      StatusName: "",
-      Qty: 0,
->>>>>>> 1496d0238286f0535a5a28809f24f3421f218190
     },
   });
 
-  useEffect(() => {
-<<<<<<< HEAD
-    employeeRef.current?.focus();
-    getLocation();
-    if (action === "add") {
-      reset({
-        Id: 0,
-        EmployeeCode: "",
-        Product: "",
-        Location: "",
-        Qty: "",
+  const column = [
+    {
+      label: "Product",
+      key: "Product",
+      align: "left",
+      format: "string",
+      type: "object",
+      sort: "Name",
+      export: true,
+    },
+    {
+      label: "จำนวน",
+      key: "Quantity",
+      align: "right",
+      format: "number",
+      digit: 2,
+      export: true,
+      total: true,
+    },
+    {
+      label: "",
+      key: "button",
+      align: "center",
+      format: "",
+      action: [
+        // { event: "edit", display: display },
+        { event: "delete", display: "IsActive" },
+      ],
+    },
+  ];
 
-      });
-    }
-  }, []);
-
   useEffect(() => {
-    console.log("data =>", data);
-    setValue("Id", data?.Id);
-    setValue("EmployeeCode", data?.EmployeeCode);
-    setValue("Product", data?.Product);
-    setValue("Location", data?.Location);
-    setValue("Qty", data?.Qty);
-  }, [data]);
-
-  useEffect(() => {
-    if (name === undefined || name === "" || dataList?.length === 0) return;
-    let exists = dataList?.some(
-      (x) => x.Name.toUpperCase() === name?.toUpperCase()
-    );
-    onExists(exists);
-  }, [name]);
-=======
     if (effectRan.current === false) {
       reset();
+      //   setInitial();     
       getLocation();
-      getGroup();
-      getStatus();
-      //setActionForm("add");
       return () => (effectRan.current = true);
     }
   }, []);
 
 
+  const handleAddClick = (data) => {
+    console.log("data =>", data);
+    // const idList = dataList?.map((item) => item?.Id);
+    // const max = Math.max(...idList);
+    // let newid = dataList?.length === 0 ? 1 : max + 1;
+    // data.Id = newid;
 
-  const handleSaveClick = (newItem) => {
-    newItem.EmployeeCode = Number(newItem.EmployeeCode);
-    newItem.WorkOrder = Number(newItem.WorkOrder);
-    console.log("handledSaveChange =>", newItem);
-    handleClearClick();
-    if (exists) return;
-    APIService.Post("Receive/Post", newItem)
-      .then((res) => {
-        if (res.status !== 200) return;
-        //console.log("handledSaveChange =>", res.data);
-        //remove old 
-        let item = dataList.filter((x) => x.WorkOrder !== res.data.WorkOrder);
-        setDataList(item);
-        //add new
-        setDataList((prev) => {
-          res.data.Check = false;
-          return [res.data, ...prev];
-        });
-        handleClearClick();
-        handleSelectedRowClick(res.data);
-      })
-      .catch((err) => console.log(err));
-    //console.log("handledSaveChange =>", newItem);
+    // let allList = [...dataList, data];
+    // const newdata = allList?.map((p) =>
+    //   p.Id === newid
+    //     ? {
+    //       ...p,
+    //       IsActive: true,
+    //     }
+    //     : {
+    //       ...p,
+    //       IsActive: false,
+    //     }
+    // );
+
+    // //console.log("after update data => ",newdata)
+
+    // setDataList(newdata);
   };
-
-  const handleWorkOrderChange = (wo) => {
-    setValue("PackingStatusName", "");
-    setValue("PpReceiveToShelf", "");
-    setValue("PlanQty", "");
-    setValue("Status", null);
-    setValue("StatusName", "");
-    setValue("Location", null);
-    setValue("Group", null);
-    setValue("Qty", "");
-    if (wo === null || wo === undefined || wo === "") return;
-    setWorkOrder(wo);
-    setValue("WorkOrder", wo);
-    GetPalnQtyByWorkOrder(wo);
-    GetStatusByWorkOrder(wo);
-  };
-
-  const GetStatusByWorkOrder = (workorder) => {
-    APIService.getAll(`Receive/GetStatusByWorkOrder/${workorder}`)
-      .then((res) => {
-        //console.log("GetStatusByWorkOrder =>", res.data);
-        if (res.data) {
-          const { PackingStatusName, PlanQty, PpReceiveToShelf } = res.data;
-          setValue("PackingStatusName", PackingStatusName);
-          setValue("PpReceiveToShelf", PpReceiveToShelf);
-          // setValue("PlanQty", Number(PlanQty).toLocaleString(undefined));
-
-          // ✅ เงื่อนไข: ถ้ามีข้อมูลครบ → set Status เป็น "MAT ครบ"
-          const matStatus = statusList.find(
-            (s) => s.Value === "ok"
-          );
-          setValue("Status", matStatus);
-          setValue("StatusName", matStatus?.Name);
-        } else {
-          setValue("PackingStatusName", "");
-          setValue("PpReceiveToShelf", "");
-          // setValue("PlanQty", "");
-
-          // ✅ เงื่อนไข: ถ้ามีข้อมูลไม่ครบ → set Status เป็น "ติด MAT"
-          const matStatus = statusList.find(
-            (s) => s.Value === "pending"
-          );
-          setValue("Status", matStatus);
-          setValue("StatusName", matStatus?.Name);
-        }
-      })
-      .catch((err) => console.log(err));
-  };
->>>>>>> 1496d0238286f0535a5a28809f24f3421f218190
 
   const getLocation = () => {
     APIService.getAll("Location/Get")
       .then((res) => {
         setLocationList(res.data);
-        //console.log(res.data);
+        //console.log("getLocation =>", res.data);
       })
       .catch((err) => console.log(err));
   };
-
-  const GetPalnQtyByWorkOrder = (workorder) => {
-    APIService.getById(`Receive/GetPalnQtyByWorkOrder`, workorder)
-      .then((res) => {
-        setPlanQty(res.data?.PlanQty);
-        setValue("PlanQty", res.data?.PlanQty);
-        setValue("ReceivedQty", res.data?.ReceivedQty);
-        let remainqty = res.data?.PlanQty - res.data?.ReceivedQty;
-        setValue("Qty", remainqty);
-        setRemainQty(remainqty);
-        console.log("setPlanQty res.data =>", res.data);
-      })
-      .catch((err) => console.log(err));
-  };
-
 
   const handleEmployeeScan = (e) => {
     if (e.key === "Enter") {
@@ -224,16 +138,8 @@ const ReceiveForm = () => {
       const value = e.target.value.trim();
       setEmployeeCode(value);
       // โฟกัสไปช่องถัดไป
-      productRef.current?.focus();
       setValue("EmployeeCode", value)
-    }
-  };
-  const handleProductScan = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const value = e.target.value.trim();
-      setProduct(value);
-      setValue("Product", value)
+      console.log("setEmployeeCode:", value);
     }
   };
 
@@ -241,230 +147,157 @@ const ReceiveForm = () => {
     setValue(name, val == null ? null : val);
     val == null ? setError(name, { type: "required" }) : clearErrors(name);
   };
-
-  const onSubmit = (value) => {
-    value.InputBy = Number(userId);
-    handleSaveClick(value);
-  }
-
-  const handleBackClick = () => {
-    navigate("/receive");
-  };
-
-  const handleClearClick = () => {
-    //console.log("handleClearClick");
-    reset();
-    setLocation(null);
-    setGroup(null);
-    clearErrors();   
-  };
-
-
   return (
-<<<<<<< HEAD
-    <div className="p-3">
-      <FormInput
-        name="EmployeeCode"
-        label="EmployeeCode"
-        register={register}
-        type="text"
-        inputRef={employeeRef}
-        inputMode="none"
-        onKeyDown={(e) => {
-          handleEmployeeScan(e);
-        }}
-        onChange={(e) => {
-          setEmployeeCode(e.target.value);
-        }}
-        error={errors.EmployeeCode}
-        required
-      />
-      <FormInput
-        name="Product"
-        label="Product"
-        register={register}
-        type="text"
-        inputRef={productRef}
-        inputMode="none"
-        onKeyDown={handleProductScan}
-        onChange={(e) => {
-          setProduct(e.target.value); // trigger useEffect
-        }}
-        error={errors.Product}
-        required
-      />
-      {/* <FormInput
-        name="Product"
-        label="Product"
-        register={register}
-        type="text"
-        onChange={(e) => {
-          setProduct(e.target.value);
-        }}
-      /> */}
-      <Select
-        list={locationList}
-        onSelectItem={onSelectItem}
-        setValue={location}
-        name="Location"
-        label="Location"
-        register={register}
-        type="text"
-        required
-        error={errors.Location}
-      />
-      <FormInput
-        name="Qty"
-        label="Qty"
-        register={register}
-        type="number"
-        required
-        error={errors.Qty}
-        onChange={(e) => {
-          setQty(e.target.value);
-        }}
-      />
-    </div>
-=======
     <>
+      <FormTitle title={"ADD NEW"} home={"Receive"} />
+      <div className="grid lg:grid-cols-6 gap-2">
+        {/* header */}
+        <div className="flex flex-col lg:col-span-2 xl:col-span-2  card p-2">
+          {/* <form onSubmit={handleSubmit(onSubmit)} autoComplete="off"> */}
+          <form>
+            <div className=" lg:grid-cols-2 gap-2 ">
+              <div>
+                <FormInput
+                  name="EmployeeCode"
+                  label="EmployeeCode"
+                  register={register}
+                  type="text"
+                  inputRef={employeeRef}
+                  inputMode="none"
+                  onKeyDown={(e) => {
+                    handleEmployeeScan(e);
+                  }}
+                  onChange={(e) => {
+                    setEmployeeCode(e.target.value);
+                  }}
+                  error={errors.EmployeeCode}
+                  required
+                />
 
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-          <div className="card p-8 w-full max-w-2xl mx-4 shadow-lg rounded-2xl">
-            <FormTitle title={"ADD NEW"} home={"Receive"} />
-            <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-3">
-              <FormInput
-                name="EmployeeCode"
-                label="EmployeeCode"
-                register={register}
-                type="text"
-                inputRef={employeeRef}
-                inputMode="none"
-                onKeyDown={(e) => {
-                  handleEmployeeScan(e);
-                }}
-                onChange={(e) => {
-                  setEmployeeCode(e.target.value);
-                }}
-                error={errors.EmployeeCode}
-                required
-              />
-
-              <FormInput
-                name="WorkOrder"
-                label="WorkOrder"
-                register={register}
-                type="text"
-                inputRef={workOrderRef}
-                inputMode="none"
-                onKeyDown={handleWorkOrderScan}
-                onChange={(e) => {
-                  handleWorkOrderChange(e.target.value); // trigger useEffect
-                }}
-                error={errors.WorkOrder}
-                required
-              />
-              <FormInput
-                name="PackingStatusName"
-                label="PackingStatusName"
-                register={register}
-                type="text"
-                readonly
-                error={errors.PackingStatusName}
-              />
-              <FormInput
-                name="PpReceiveToShelf"
-                label="PpReceiveToShelf"
-                register={register}
-                type="text"
-                readonly
-                error={errors.PpReceiveToShelf}
-              />
-              <FormInput
-                name="PlanQty"
-                label="Plan Qty"
-                register={register}
-                type="text"
-                readonly
-                error={errors.PlanQty}
-              />
-              <FormInput
-                name="ReceivedQty"
-                label="Received Qty"
-                register={register}
-                type="text"
-                readonly
-              />
-              <FormInput
-                name="Qty"
-                label="Qty"
-                register={register}
-                type="number"
-                required
-                setValue={qty}
-                error={errors.Qty}
-                onChange={(e) => {
-                  setQty(e.target.value);
-                }}
-                max={remainqty}
-              />
-              <Select
-                name="Location"
-                label="Location"
-                register={register}
-                list={locationList}
-                onSelectItem={onSelectItem}
-                setValue={location}
-                type="text"
-                required
-                error={errors.Location}
-              />
-              <Select
-                name="Group"
-                label="Group"
-                register={register}
-                list={groupList}
-                onSelectItem={onSelectItem}
-                setValue={group}
-                type="text"
-                required
-                error={errors.Group}
-              />
-              <FormInput
-                name="StatusName"
-                label="Status"
-                register={register}
-                type="text"
-                required
-                error={errors.StatusName}
-                readonly
-              />
-              <div className="pt-3 flex justify-center gap-2">
-                <button type="submit" className="btn btn_primary uppercase" >
+              </div>
+              <div >
+                <Select
+                  list={locationList}
+                  onSelectItem={onSelectItem}
+                  setValue={location}
+                  name="Location"
+                  label="Location"
+                  register={register}
+                  type="text"
+                  required
+                  error={errors.Location}
+                />
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-2">
+                <button type="submit" className="btn btn_primary  uppercase">
                   บันทึกข้อมูล
                 </button>
                 <button
                   type="button"
-                  className="btn btn_outlined btn_info uppercase"
-                  onClick={handleClearClick}
+                  className="btn btn_outlined btn_info  uppercase ml-1"
+                //onClick={handleClearClick}
                 >
                   เคลียร์ข้อมูล
                 </button>
                 <button
                   type="button"
-                  className="btn btn_secondary uppercase"
-                  onClick={handleBackClick}
+                  className="btn btn btn_secondary uppercase ml-1"
+                //onClick={handleBackClick}
                 >
                   กลับไปหน้าหลัก
                 </button>
               </div>
 
-            </form>
+            </div>
+          </form>
+        </div>
+
+        {/* details */}
+        <div className="flex flex-col gap-y-2 lg:col-span-4 xl:col-span-4 ">
+          <div>
+            <ReceiveFormDetail
+              onAddClick={handleAddClick}
+            //onUpdateClick={handleUpdateDetailClick}
+            //action={actionForm}
+            //editdata={editData}
+            //dataList={dataList}
+            />
+          </div>
+          <div>
+            <Table
+              column={column}
+              data={dataList}
+              tableStyle={"list"}
+              showSammary={true}
+            //actionClick={buttonTableClick}
+            />
           </div>
         </div>
       </div>
+
+      {/* <MassageBox
+        show={show}
+        action={actionMsgBox}
+        name={"Sale"}
+        content={content}
+        size={"xl"}
+        Massage={"Are you sure want to delete this item?"}
+        handleCancelClick={() => {
+          setShow(false);
+        }}
+        onDeleteClick={handleDeleteDetailClick}
+      />
+      <div className={`${show ? "overlay active" : ""}`}></div> */}
+      {/* 
+      {showform && (
+        <>
+          <Modal
+            show={showform}
+            onCancelClick={handledCancelClick}
+            onSaveChange={handledMasterSaveChange}
+            action={"add"}
+            name={form}
+            size={"xl"}
+            content={content}
+            form={
+              form === "car" ? (
+                <CarFormAdd showButton={false} />
+              ) : (
+                <VatFormAdd showButton={false} />
+              )
+            }
+          />
+          <div className={`${showform ? "overlay active" : ""}`}></div>
+        </>
+      )} */}
+      <CustomModal
+        //show={showConfirm}
+        //content={content}
+        //action={"confirm"}
+        name={"Sale"}
+        size={"4xl"}
+        // handleCancelClick={() => {
+        //   setShowConfirm(false);
+        //   setActionConfirm(false);
+        //   // setErrMsgSave("");
+        // }}
+        form={
+          <ReceiveConfirm
+          //action={actionConfirm}
+          //dataSelected={dataSave}
+          //onSaveClick={handleSaveClick}
+          // onBackClick={() => {
+          //   setShowConfirm(false);
+          //   setActionConfirm(false);
+          //   // setErrMsgSave("");
+          // }}
+          />
+        }
+      />
+      {/* <div className={`${showConfirm ? "overlay active" : ""}`}></div> */}
     </>
->>>>>>> 1496d0238286f0535a5a28809f24f3421f218190
   )
 }
 
