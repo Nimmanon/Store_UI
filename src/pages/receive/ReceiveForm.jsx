@@ -1,44 +1,32 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ReceiveFormDetail from './ReceiveFormDetail'
-import ReceiveConfirm from './ReceiveConfirm';
-import FormTitle from '../../components/FormTitle';
-import Table from '../../components/Table';
-import CustomModal from '../../components/CustomModal';
-import { useForm } from 'react-hook-form';
-import FormInput from '../../components/FormInput';
-import Select from '../../components/Select';
-import APIService from '../../services/APIService';
-
-
+import React, { useEffect, useRef, useState } from "react";
+import { useForm, FormProvider, set, get } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import FormTitle from "../../components/FormTitle";
+import APIService from "../../services/APIService";
+import Select from "../../components/Select";
+import FormInput from "../../components/FormInput";
 
 const ReceiveForm = () => {
-
-  const [locationList, setLocationList] = useState();
   const [dataList, setDataList] = useState([]);
+  const [locationList, setLocationList] = useState([]);
+  const [stockList, setStockList] = useState([]);
+
+  const [product, setProduct] = useState();
   const [employeecode, setEmployeeCode] = useState();
-
   const [location, setLocation] = useState();
+  const [qty, setQty] = useState(0);
+  const [exists, setExists] = useState(false);
+  const [issubmit, setIsSubmit] = useState(false);
 
-
-
-  //modal MessageBox
-  // const [content, setContent] = useState({ Id: 0, Name: "" });
-  // const [actionMsgBox, setActionMsgBox] = useState(false);
-  // const [show, setShow] = useState(false);
-  // const [showform, setShowForm] = useState(false);
-  // const [form, setForm] = useState();
-
-  // const [dataSave, setDataSave] = useState();
-  //const [showConfirm, setShowConfirm] = useState(false);
-  // const [actionConfirm, setActionConfirm] = useState(false);
-
-
-  //form
-  // const ref = useRef();
-  const effectRan = useRef(false);
-
-  //system
+  // system
+  const [auth, setAuth] = useState(useSelector((state) => state.auth));
+  const [userId, setUserId] = useState();
   const employeeRef = useRef(null);
+  const ProductRef = useRef(null);
+
+  const effectRan = useRef(false);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -53,84 +41,73 @@ const ReceiveForm = () => {
     defaultValues: {
       Id: 0,
       EmployeeCode: "",
+      Product: "",
       Location: null,
+      Qty: 0
     },
   });
-
-  const column = [
-    {
-      label: "Product",
-      key: "Product",
-      align: "left",
-      format: "string",
-      type: "object",
-      sort: "Name",
-      export: true,
-    },
-    {
-      label: "จำนวน",
-      key: "Quantity",
-      align: "right",
-      format: "number",
-      digit: 2,
-      export: true,
-      total: true,
-    },
-    {
-      label: "",
-      key: "button",
-      align: "center",
-      format: "",
-      action: [
-        // { event: "edit", display: display },
-        { event: "delete", display: "IsActive" },
-      ],
-    },
-  ];
 
   useEffect(() => {
     if (effectRan.current === false) {
       reset();
-      //   setInitial();     
       getLocation();
+      //setActionForm("add");
       return () => (effectRan.current = true);
     }
   }, []);
 
+  const handleSaveClick = (newItem) => {
+    setIsSubmit(true);
+    newItem.Product = Number(newItem.Product);
+    newItem.Qty = Number(newItem.Qty);    
+    console.log("handledSaveChange Receive =>", newItem);
+    // handleClearClick();
+    if (exists) return;
+    APIService.Post("Receive/Post", newItem)
+      .then((res) => {
+        if (res.status !== 200) return;
+        setDataList((prevItem) => {
+          return [res.data, ...prevItem];
+        });
+        handleClearClick();
+      })
+      .catch((err) => console.log(err)).finally(() => {
+        setIsSubmit(false);
+      });
 
-  const handleAddClick = (data) => {
-    console.log("data =>", data);
-    // const idList = dataList?.map((item) => item?.Id);
-    // const max = Math.max(...idList);
-    // let newid = dataList?.length === 0 ? 1 : max + 1;
-    // data.Id = newid;
+  };
 
-    // let allList = [...dataList, data];
-    // const newdata = allList?.map((p) =>
-    //   p.Id === newid
-    //     ? {
-    //       ...p,
-    //       IsActive: true,
-    //     }
-    //     : {
-    //       ...p,
-    //       IsActive: false,
-    //     }
-    // );
 
-    // //console.log("after update data => ",newdata)
+  const onSubmit = (value) => {
+    value.InputBy = Number(userId);
+    handleSaveClick(value);
 
-    // setDataList(newdata);
+  }
+
+  const handleBackClick = () => {
+    navigate("/receive");
+    // setAction("list");
+  };
+
+  const handleProductChange = (prod) => {
+    setValue("Location", ([]));
+    setValue("Qty", "");
+    if (prod === null || prod === undefined || prod === "") return;
+    setProduct(prod);
+    setValue("Product", prod);
+    // getStatus(prod);
+    getLocation(prod);
   };
 
   const getLocation = () => {
     APIService.getAll("Location/Get")
       .then((res) => {
         setLocationList(res.data);
-        //console.log("getLocation =>", res.data);
+        //console.log("Location =>", res.data);
       })
       .catch((err) => console.log(err));
   };
+
 
   const handleEmployeeScan = (e) => {
     if (e.key === "Enter") {
@@ -138,165 +115,123 @@ const ReceiveForm = () => {
       const value = e.target.value.trim();
       setEmployeeCode(value);
       // โฟกัสไปช่องถัดไป
+      ProductRef.current?.focus();
       setValue("EmployeeCode", value)
-      console.log("setEmployeeCode:", value);
     }
   };
 
-  const onSelectItem = (val, name) => {
-    setValue(name, val == null ? null : val);
-    val == null ? setError(name, { type: "required" }) : clearErrors(name);
+  const handleProductScan = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const value = e.target.value.trim();
+      setProduct(value);
+      setValue("Product", value)
+      handleProductChange(value);
+    }
   };
+
+  const onSelectItem = async (e, name) => {
+    //console.log("onSelectItem ", name, " => ", e);
+    setValue(name, e);
+    e === null ? setError(name, { type: "required" }) : clearErrors(name);
+  };
+
+
+  const handleClearClick = () => {
+    reset();
+    setLocation(null);
+    setLocationList([]);
+    clearErrors();
+    employeeRef.current?.focus();
+    // refocus to employee code for next scan        
+  };
+
+
   return (
     <>
-      <FormTitle title={"ADD NEW"} home={"Receive"} />
-      <div className="grid lg:grid-cols-6 gap-2">
-        {/* header */}
-        <div className="flex flex-col lg:col-span-2 xl:col-span-2  card p-2">
-          {/* <form onSubmit={handleSubmit(onSubmit)} autoComplete="off"> */}
-          <form>
-            <div className=" lg:grid-cols-2 gap-2 ">
-              <div>
-                <FormInput
-                  name="EmployeeCode"
-                  label="EmployeeCode"
-                  register={register}
-                  type="text"
-                  inputRef={employeeRef}
-                  inputMode="none"
-                  onKeyDown={(e) => {
-                    handleEmployeeScan(e);
-                  }}
-                  onChange={(e) => {
-                    setEmployeeCode(e.target.value);
-                  }}
-                  error={errors.EmployeeCode}
-                  required
-                />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="card p-8 w-full max-w-2xl mx-4 shadow-lg rounded-2xl">
+            <FormTitle title={"ADD NEW"} home={"Receive"} />
+            <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-3">
+              <FormInput
+                name="EmployeeCode"
+                label="EmployeeCode"
+                register={register}
+                type="text"
+                inputRef={employeeRef}
+                inputMode="none"
+                onKeyDown={(e) => {
+                  handleEmployeeScan(e);
+                }}
+                onChange={(e) => {
+                  setEmployeeCode(e.target.value);
+                }}
+                error={errors.EmployeeCode}
+                required
+              />
+              <FormInput
+                name="Product"
+                label="Product"
+                register={register}
+                type="text"
+                inputRef={ProductRef}
+                inputMode="none"
+                onKeyDown={handleProductScan}
+                // onChange={(e) => {
+                //     setWorkOrder(e.target.value); // trigger useEffect
+                // }}
+                error={errors.WorkOrder}
+                required
+              />
+              <Select
+                list={locationList}
+                onSelectItem={onSelectItem}
+                setValue={location}
+                name="Location"
+                label="Location"
+                register={register}
+                type="text"
+                required
+                error={errors.Location}
+              />
+              <FormInput
+                name="Qty"
+                label="Qty"
+                register={register}
+                type="number"
+                required
+                error={errors.Qty}
+                onChange={(e) => {
+                  setQty(e.target.value);
+                }}
+                max={Number(qty)}
+                min={1}
+              />
 
-              </div>
-              <div >
-                <Select
-                  list={locationList}
-                  onSelectItem={onSelectItem}
-                  setValue={location}
-                  name="Location"
-                  label="Location"
-                  register={register}
-                  type="text"
-                  required
-                  error={errors.Location}
-                />
-              </div>
-            </div>
-            <div className="mt-2">
-              <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-2">
-                <button type="submit" className="btn btn_primary  uppercase">
+              <div className="pt-3 flex justify-center gap-2">
+                <button type="submit" className="btn btn_primary uppercase" disabled={issubmit}>
                   บันทึกข้อมูล
                 </button>
                 <button
                   type="button"
-                  className="btn btn_outlined btn_info  uppercase ml-1"
-                //onClick={handleClearClick}
+                  className="btn btn_outlined btn_info uppercase"
+                  onClick={handleClearClick}
                 >
                   เคลียร์ข้อมูล
                 </button>
                 <button
                   type="button"
-                  className="btn btn btn_secondary uppercase ml-1"
-                //onClick={handleBackClick}
+                  className="btn btn_secondary uppercase"
+                  onClick={handleBackClick}
                 >
                   กลับไปหน้าหลัก
                 </button>
               </div>
-
-            </div>
-          </form>
-        </div>
-
-        {/* details */}
-        <div className="flex flex-col gap-y-2 lg:col-span-4 xl:col-span-4 ">
-          <div>
-            <ReceiveFormDetail
-              onAddClick={handleAddClick}
-            //onUpdateClick={handleUpdateDetailClick}
-            //action={actionForm}
-            //editdata={editData}
-            //dataList={dataList}
-            />
-          </div>
-          <div>
-            <Table
-              column={column}
-              data={dataList}
-              tableStyle={"list"}
-              showSammary={true}
-            //actionClick={buttonTableClick}
-            />
+            </form>
           </div>
         </div>
       </div>
-
-      {/* <MassageBox
-        show={show}
-        action={actionMsgBox}
-        name={"Sale"}
-        content={content}
-        size={"xl"}
-        Massage={"Are you sure want to delete this item?"}
-        handleCancelClick={() => {
-          setShow(false);
-        }}
-        onDeleteClick={handleDeleteDetailClick}
-      />
-      <div className={`${show ? "overlay active" : ""}`}></div> */}
-      {/* 
-      {showform && (
-        <>
-          <Modal
-            show={showform}
-            onCancelClick={handledCancelClick}
-            onSaveChange={handledMasterSaveChange}
-            action={"add"}
-            name={form}
-            size={"xl"}
-            content={content}
-            form={
-              form === "car" ? (
-                <CarFormAdd showButton={false} />
-              ) : (
-                <VatFormAdd showButton={false} />
-              )
-            }
-          />
-          <div className={`${showform ? "overlay active" : ""}`}></div>
-        </>
-      )} */}
-      <CustomModal
-        //show={showConfirm}
-        //content={content}
-        //action={"confirm"}
-        name={"Sale"}
-        size={"4xl"}
-        // handleCancelClick={() => {
-        //   setShowConfirm(false);
-        //   setActionConfirm(false);
-        //   // setErrMsgSave("");
-        // }}
-        form={
-          <ReceiveConfirm
-          //action={actionConfirm}
-          //dataSelected={dataSave}
-          //onSaveClick={handleSaveClick}
-          // onBackClick={() => {
-          //   setShowConfirm(false);
-          //   setActionConfirm(false);
-          //   // setErrMsgSave("");
-          // }}
-          />
-        }
-      />
-      {/* <div className={`${showConfirm ? "overlay active" : ""}`}></div> */}
     </>
   )
 }

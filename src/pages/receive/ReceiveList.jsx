@@ -4,6 +4,7 @@ import APIService from "../../services/APIService";
 import Panel from "../../components/Panel";
 import Table from "../../components/Table";
 import { useNavigate } from "react-router-dom";
+import Modal from "../../components/Modal";
 
 const ReceiveList = () => {
 
@@ -89,16 +90,16 @@ const ReceiveList = () => {
             format: "shotdatetime",
             export: true,
         },
-        // {
-        //   label: "",
-        //   key: "button",
-        //   align: "center",
-        //   format: "",
-        //   action: [
-        //     { event: "view", display: true },
-        //     // { event: "print", display: "IsActive" }, // ตรวจสอบค่า IsActive
-        //   ],
-        // },
+        {
+            label: "",
+            key: "button",
+            align: "right",
+            format: "",
+            action: [
+                // { event: "edit", display: true },
+                { event: "delete", display: true },
+            ],
+        },
     ];
 
     const setInitial = () => {
@@ -234,7 +235,8 @@ const ReceiveList = () => {
                 tableStyle={"list"}
                 isLoading={isLoading}
                 showPagging={true}
-            />
+            />           
+            <div className={`${show ? "overlay active" : ""}`}></div>
         </>
 
     )
