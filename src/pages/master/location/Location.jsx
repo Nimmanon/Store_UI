@@ -106,7 +106,6 @@ const Location = () => {
 
   const buttonTableClick = (action, value) => {
     if (!action) return;
-
     setShow(true);
     setContent({ Id: value.Id, Name: value.Name });
     setDataSelected(value);

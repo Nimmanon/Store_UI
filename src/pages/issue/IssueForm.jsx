@@ -15,15 +15,31 @@ const IssueForm = () => {
   const [product, setProduct] = useState();
   const [employeecode, setEmployeeCode] = useState();
   const [location, setLocation] = useState();
+
   const [qty, setQty] = useState(0);
+  const [remain, setRemain] = useState(0);
+
+  const qtyNum = Number(qty || 0);
+  const remainNum = Number(remain || 0);
+  const canSave = qtyNum > 0 && qtyNum <= remainNum;
+
+
+  // const remainNum = Number(remain || 0);
+  // const isOverQty = qtyNum > remainNum;
+  // const canSubmit = qtyNum > 0 && !isOverQty;
+
   const [exists, setExists] = useState(false);
   const [issubmit, setIsSubmit] = useState(false);
+
+  const [isBN, setIsBN] = useState("BN2");
 
   // system
   const [auth, setAuth] = useState(useSelector((state) => state.auth));
   const [userId, setUserId] = useState();
   const employeeRef = useRef(null);
   const ProductRef = useRef(null);
+  const LocationRef = useRef(null);
+  const QtyRef = useRef(null);
 
   const effectRan = useRef(false);
   const navigate = useNavigate();
@@ -47,11 +63,20 @@ const IssueForm = () => {
     },
   });
 
+  useEffect(() => {
+    if (effectRan.current === false) {
+      reset();
+      //getLocation();
+      //setActionForm("add");
+      return () => (effectRan.current = true);
+    }
+  }, []);
+
   const handleSaveClick = (newItem) => {
     setIsSubmit(true);
-    newItem.Product = Number(newItem.Product);
+    newItem.Product = String(newItem.Product);
     newItem.Qty = Number(newItem.Qty);
-    // console.log("handledSaveChange Issue =>", newItem);
+    //console.log("handledSaveChange issue =>", newItem);
     // handleClearClick();
     if (exists) return;
     APIService.Post("Issue/Post", newItem)
@@ -76,10 +101,14 @@ const IssueForm = () => {
   }
 
   const handleBackClick = () => {
-    navigate("/receive");
+    navigate("/issue");
     // setAction("list");
   };
 
+  const handleStockClick = () => {
+    navigate("/reportstock");
+    // setAction("list");
+  };
   const handleProductChange = (prod) => {
     setValue("Location", ([]));
     setValue("Qty", "");
@@ -87,20 +116,32 @@ const IssueForm = () => {
     setProduct(prod);
     setValue("Product", prod);
     // getStatus(prod);
-    getLocation(prod);
+    //getLocation(prod);
   };
 
-  const getLocation = (prod) => {
-    console.log("prod =>", prod);
-    // if (prod === null || prod === undefined || prod === "") return;
-    // APIService.getById("Receive/GetStatusByProductCode", prod)
-    //   .then((res) => {
-    //     setLocationList(res.data);
-    //     //console.log("Stock =>", res.data);
-    //   })
-    //   .catch((err) => console.log(err));
-  };
+  // const getLocation = () => {
+  //   APIService.getAll("Location/Get")
+  //     .then((res) => {
+  //       setLocationList(res.data);
+  //       //console.log("Location =>", res.data);
+  //     })
+  //     .catch((err) => console.log(err));
+  // };
 
+  const GetLocationByProduct = (product) => {
+    //console.log("GetLocationByProduct =>", product);
+    APIService.getByName("Issue/GetLocationByProduct", product)
+      .then((res) => {
+        // setData(res.data);
+        setLocationList(res.data);
+        // setRemain(res.data?.[0]?.Qty ?? 0);  // ✅ Qty อยู่ใน element ตัวแรก
+        // console.log("setRemain =>", res.data?.[0]?.Qty ?? 0);
+        // console.log("setLocationList =>", res.data);
+        // ✅ โฟกัสหลัง state update
+        setTimeout(() => LocationRef.current?.focus?.(), 0);
+      })
+      .catch((err) => console.log(err));
+  };
 
   const handleEmployeeScan = (e) => {
     if (e.key === "Enter") {
@@ -112,50 +153,105 @@ const IssueForm = () => {
       setValue("EmployeeCode", value)
     }
   };
+  //อันนี้สามามารถใช้ได้นะครับ
+  // const handleProductScan = (e) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     const value = e.target.value.trim();
+  //     setProduct(value);
+  //     setValue("Product", value)
+  //     handleProductChange(value);
+  //     GetLocationByProduct(value);
+  //   }
+  // };
 
+  //อันนี้คือcursorไปอยู่ในช่อง location
   const handleProductScan = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       const value = e.target.value.trim();
       setProduct(value);
-      setValue("Product", value)
+      setValue("Product", value);
       handleProductChange(value);
+      GetLocationByProduct(value); // จะไป focus ที่ location หลังโหลดเสร็จ
     }
   };
 
-  const onSelectItem = (val, name) => {
-    setValue(name, val == null ? null : val);
-    val == null ? setError(name, { type: "required" }) : clearErrors(name);
+  const handleBNChange = (e) => {
+    const value = e.target.value; // "BN1" = B, "BN2" = N (สมมติใช้แบบนี้)
+    setIsBN(value);
+    setValue("isBN", value === "BN1"); // true = B, false = N
 
-    switch (name?.toLowerCase()) {
-      case "location":
-        setGroupList(stockList?.filter(x => x.Location?.Id === val?.Id).map(x => x.Group));
-        setLocation(val);
-        //console.log("Location =>", stockList);
-        break;
-      // case "group":
-      //   let [stock] = stockList?.filter(x => x.Location?.Id === location?.Id && x.Group?.Id === val?.Id);
-      //   //console.log("stock =>", stock);
-      //   setStatus(stock.Status);
-      //   setValue("Status", stock.Status);
-      //   setValue("StatusName", stock.Status.Name);
-      //   setValue("Qty", stock.Remain);
-      //   setQty(stock.Remain);
-      //   setRemain(stock.Remain);
-      //   //console.log("stock.Remain =>", stock);
-      //   break;
+    const currentProduct = getValues("Product") || "";
+
+    // ตัด -B หรือ -N ทิ้งก่อน (กันซ้อน)
+    const baseProduct = currentProduct.replace(/-(B|N)$/, "");
+
+    let newProduct = baseProduct;
+
+    if (value === "BN1") {
+      newProduct = baseProduct + "-B";
+    } else if (value === "BN2") {
+      newProduct = baseProduct + "-N";
+    }
+
+    setValue("Product", newProduct, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    //console.log("Product =>", newProduct);
+  };
+
+
+
+  // เดิมใช้อันนี้
+  const onSelectItem = async (e, name) => {
+    //console.log("onSelectItem ", name, " => ", e);
+    setValue(name, e);
+    e === null ? setError(name, { type: "required" }) : clearErrors(name);
+    let [q] = locationList?.filter((x) => x.Id === e?.Id);
+    setValue("Qty", q?.Qty);
+    //console.log("Qty =>", q?.Qty);  
+    setQty(q?.Qty);
+    if (name === "Location") {
+      setLocation(e == null ? null : e);
+      setRemain(q?.Qty ?? 0); 
+      //console.log("Remain =>", q?.Qty);
+      // setTimeout(() => QtyRef.current?.focus?.(), 0);
     }
   };
+
+
+  // const onSelectItem = (e, name) => {
+  //   setValue(name, e ?? null, { shouldValidate: true, shouldDirty: true });
+  //   e == null ? setError(name, { type: "required" }) : clearErrors(name);
+
+  //   if (name === "Location") {
+  //     setLocation(e ?? null);
+
+  //     const q = locationList?.find(x => x.Id === e?.Id);
+  //     setRemain(q?.Qty ?? 0);            // ✅ คงเหลือ
+  //     setValue("Qty", "", { shouldValidate: true }); // ✅ ให้ user กรอกเอง
+  //     // setTimeout(() => setFocus("Qty"), 50);
+  //   }
+  // };
+
+
+
 
   const handleClearClick = () => {
     reset();
     setLocation(null);
     setLocationList([]);
+    setValue("Qty", "");
+    setValue("Product", "");
+    setValue("EmployeeCode", "");
+    setValue("Location", null);
     clearErrors();
     employeeRef.current?.focus();
+    // console.log("handleClearClick");
     // refocus to employee code for next scan        
   };
-
 
   return (
     <>
@@ -163,7 +259,12 @@ const IssueForm = () => {
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
           <div className="card p-8 w-full max-w-2xl mx-4 shadow-lg rounded-2xl">
             <FormTitle title={"ADD NEW"} home={"Issue"} />
-            <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-3">
+            <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
+              if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+                e.preventDefault(); // กัน Enter submit form
+              }
+            }}
+              autoComplete="off" className="space-y-3">
               <FormInput
                 name="EmployeeCode"
                 label="EmployeeCode"
@@ -191,7 +292,7 @@ const IssueForm = () => {
                 // onChange={(e) => {
                 //     setWorkOrder(e.target.value); // trigger useEffect
                 // }}
-                error={errors.WorkOrder}
+                error={errors.Product}
                 required
               />
               <Select
@@ -201,6 +302,7 @@ const IssueForm = () => {
                 name="Location"
                 label="Location"
                 register={register}
+                selectRef={LocationRef}
                 type="text"
                 required
                 error={errors.Location}
@@ -218,11 +320,42 @@ const IssueForm = () => {
                 max={Number(qty)}
                 min={1}
               />
+              {/* <div className=" mt-3 mb-2">
+                <div className="flex">
+                  <h4 className="mr-5">B & N</h4>
+                  <label className="custom-radio">
+                    <input
+                      name="IsBN"
+                      type="radio"
+                      value="BN1"
+                      required
+                      checked={isBN === "BN1"}
+                      onChange={handleBNChange}
+                    />
+                    <span></span>
+                    <span>B</span>
+                  </label>
 
+                  <label className="custom-radio ml-4">
+                    <input
+                      name="IsBN"
+                      type="radio"
+                      value="BN2"
+                      checked={isBN === "BN2"}
+                      onChange={handleBNChange}
+                    />
+                    <span></span>
+                    <span>N</span>
+                  </label>                 
+                </div>
+              </div> */}
               <div className="pt-3 flex justify-center gap-2">
-                <button type="submit" className="btn btn_primary uppercase" disabled={issubmit}>
-                  บันทึกข้อมูล
-                </button>
+                {/* {Number(qty) > 0 &&( */}
+                {canSave && (
+                  <button type="submit" className="btn btn_primary uppercase">
+                    บันทึกข้อมูล
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn_outlined btn_info uppercase"
@@ -236,6 +369,13 @@ const IssueForm = () => {
                   onClick={handleBackClick}
                 >
                   กลับไปหน้าหลัก
+                </button>
+                <button
+                  type="button"
+                  className="btn btn_info uppercase"
+                  onClick={handleStockClick}
+                >
+                  กลับไปหน้า Stock
                 </button>
               </div>
             </form>

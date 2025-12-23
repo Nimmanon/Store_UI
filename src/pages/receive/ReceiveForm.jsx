@@ -10,7 +10,6 @@ import FormInput from "../../components/FormInput";
 const ReceiveForm = () => {
   const [dataList, setDataList] = useState([]);
   const [locationList, setLocationList] = useState([]);
-  const [stockList, setStockList] = useState([]);
 
   const [product, setProduct] = useState();
   const [employeecode, setEmployeeCode] = useState();
@@ -19,11 +18,18 @@ const ReceiveForm = () => {
   const [exists, setExists] = useState(false);
   const [issubmit, setIsSubmit] = useState(false);
 
+
+
+
   // system
   const [auth, setAuth] = useState(useSelector((state) => state.auth));
   const [userId, setUserId] = useState();
   const employeeRef = useRef(null);
   const ProductRef = useRef(null);
+  const LocationRef = useRef(null);
+  // const QtyRef = useRef(null);
+  const { setFocus } = useForm(); // เพิ่มจาก useForm
+
 
   const effectRan = useRef(false);
   const navigate = useNavigate();
@@ -58,9 +64,10 @@ const ReceiveForm = () => {
 
   const handleSaveClick = (newItem) => {
     setIsSubmit(true);
-    newItem.Product = Number(newItem.Product);
-    newItem.Qty = Number(newItem.Qty);    
-    console.log("handledSaveChange Receive =>", newItem);
+    newItem.Product = String(newItem.Product);
+    newItem.Qty = Number(newItem.Qty);
+    newItem.InputBy = Number(userId);
+    // console.log("handledSaveChange Receive =>", newItem);
     // handleClearClick();
     if (exists) return;
     APIService.Post("Receive/Post", newItem)
@@ -74,14 +81,12 @@ const ReceiveForm = () => {
       .catch((err) => console.log(err)).finally(() => {
         setIsSubmit(false);
       });
-
   };
 
 
   const onSubmit = (value) => {
     value.InputBy = Number(userId);
     handleSaveClick(value);
-
   }
 
   const handleBackClick = () => {
@@ -89,15 +94,53 @@ const ReceiveForm = () => {
     // setAction("list");
   };
 
-  const handleProductChange = (prod) => {
-    setValue("Location", ([]));
-    setValue("Qty", "");
-    if (prod === null || prod === undefined || prod === "") return;
-    setProduct(prod);
-    setValue("Product", prod);
-    // getStatus(prod);
-    getLocation(prod);
+  const handleStockClick = () => {
+    navigate("/reportstock");
+    // setAction("list");
   };
+  //อันนี้ใช้ได้ปกติ
+  // const handleProductChange = (prod) => {
+  //   setValue("Location", ([]));
+  //   setValue("Qty", "");
+  //   if (prod === null || prod === undefined || prod === "") return;
+  //   setProduct(prod);
+  //   setValue("Product", prod);
+  //   // getStatus(prod);
+  //   getLocation(prod);
+  //   console.log("Product =>", prod);
+  // };
+
+  const handleProductChange = (prodRaw) => {
+    const raw = (prodRaw ?? "").trim();
+    if (!raw) return;
+
+    // ✅ แยก Product | Qty
+    const [p, q] = raw.split("|");
+    const productCode = (p ?? "").trim();
+    const qtyValue = q !== undefined ? Number(String(q).trim()) : null;
+
+    // ✅ set product ที่ถูกตัดแล้ว
+    setProduct(productCode);
+    setValue("Product", productCode, { shouldValidate: true, shouldDirty: true });
+
+    // ✅ ถ้ามี qty หลัง | ให้ใส่ลง Qty
+    if (qtyValue !== null && Number.isFinite(qtyValue)) {
+      setValue("Qty", qtyValue, { shouldValidate: true, shouldDirty: true });
+      setQty(qtyValue); // ถ้าคุณยังใช้ state qty อยู่
+    } else {
+      setValue("Qty", "", { shouldValidate: true });
+      setQty(0);
+    }
+
+    // ✅ reset location และโหลด location ตาม productCode
+    setValue("Location", null);
+    setLocation(null);
+
+    getLocation(productCode);
+
+    console.log("Product =>", productCode, "Qty =>", qtyValue);
+  };
+
 
   const getLocation = () => {
     APIService.getAll("Location/Get")
@@ -119,7 +162,7 @@ const ReceiveForm = () => {
       setValue("EmployeeCode", value)
     }
   };
-
+  // อันนี้ใช้ได้ปกติ
   const handleProductScan = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -127,13 +170,19 @@ const ReceiveForm = () => {
       setProduct(value);
       setValue("Product", value)
       handleProductChange(value);
+      setTimeout(() => LocationRef.current?.focus?.(), 0);
+      // console.log("Product =>", value);
     }
   };
-
-  const onSelectItem = async (e, name) => {
-    //console.log("onSelectItem ", name, " => ", e);
-    setValue(name, e);
-    e === null ? setError(name, { type: "required" }) : clearErrors(name);
+  const onSelectItem = (val, name) => {
+    setValue(name, val == null ? null : val);
+    // keep RHF errors in sync
+    val == null ? setError(name, { type: "required" }) : clearErrors(name);
+    // also sync local state used by <Select setValue={...}>
+    if (name === "Location") {
+      setLocation(val == null ? null : val);
+      setTimeout(() => setFocus("Qty"), 0); // ✅ โฟกัสไป Qty โดยไม่ต้องใช้ ref
+    }
   };
 
 
@@ -141,19 +190,26 @@ const ReceiveForm = () => {
     reset();
     setLocation(null);
     setLocationList([]);
+    setValue("Qty", "");
+    setValue("Product", "");
+    setValue("EmployeeCode", "");
+    setValue("Location", null);
     clearErrors();
     employeeRef.current?.focus();
+    // console.log("handleClearClick");
     // refocus to employee code for next scan        
   };
-
-
   return (
     <>
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
           <div className="card p-8 w-full max-w-2xl mx-4 shadow-lg rounded-2xl">
             <FormTitle title={"ADD NEW"} home={"Receive"} />
-            <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-3">
+            <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
+              if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+                e.preventDefault(); // กัน Enter submit form
+              }
+            }} autoComplete="off" className="space-y-3">
               <FormInput
                 name="EmployeeCode"
                 label="EmployeeCode"
@@ -178,10 +234,10 @@ const ReceiveForm = () => {
                 inputRef={ProductRef}
                 inputMode="none"
                 onKeyDown={handleProductScan}
-                // onChange={(e) => {
-                //     setWorkOrder(e.target.value); // trigger useEffect
-                // }}
-                error={errors.WorkOrder}
+                onChange={(e) => {
+                  setProduct(e.target.value); // trigger useEffect
+                }}
+                error={errors.Product}
                 required
               />
               <Select
@@ -191,6 +247,7 @@ const ReceiveForm = () => {
                 name="Location"
                 label="Location"
                 register={register}
+                selectRef={LocationRef}
                 type="text"
                 required
                 error={errors.Location}
@@ -205,14 +262,19 @@ const ReceiveForm = () => {
                 onChange={(e) => {
                   setQty(e.target.value);
                 }}
-                max={Number(qty)}
-                min={1}
+                // max={Number(qty)}
+                // min={1}
               />
 
               <div className="pt-3 flex justify-center gap-2">
-                <button type="submit" className="btn btn_primary uppercase" disabled={issubmit}>
+                {Number(qty) > 0 && (
+                  <button type="submit" className="btn btn_primary uppercase">
+                    บันทึกข้อมูล
+                  </button>
+                )}
+                {/* <button type="submit" className="btn btn_primary uppercase" disabled={issubmit}>
                   บันทึกข้อมูล
-                </button>
+                </button> */}
                 <button
                   type="button"
                   className="btn btn_outlined btn_info uppercase"
@@ -226,6 +288,13 @@ const ReceiveForm = () => {
                   onClick={handleBackClick}
                 >
                   กลับไปหน้าหลัก
+                </button>
+                <button
+                  type="button"
+                  className="btn btn_info uppercase"
+                  onClick={handleStockClick}
+                >
+                  กลับไปหน้า Stock
                 </button>
               </div>
             </form>

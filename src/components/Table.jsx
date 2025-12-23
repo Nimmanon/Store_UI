@@ -31,7 +31,7 @@ const Table = ({
   showSelectedRow = false,
   rowSelected,
   pageSize = 10,
-  showCheckAll=true
+  showCheckAll = true
 }) => {
   const [columnpage, setColumnpage] = useState();
   const [currentPage, setCurrentPage] = useState(1);
@@ -315,7 +315,7 @@ const Table = ({
   );
 };
 
-const TableHeadItem = ({ item, clickSort, allClick, data,showCheckAll }) => {
+const TableHeadItem = ({ item, clickSort, allClick, data, showCheckAll }) => {
   const [checkAll, setCheckAll] = useState(false);
 
   useEffect(() => {
@@ -334,9 +334,9 @@ const TableHeadItem = ({ item, clickSort, allClick, data,showCheckAll }) => {
     <th
       style={{ textAlign: item.align, cursor: "pointer" }}
       className={`uppercase ${item.label?.toLowerCase() === "remark" ||
-          item.label?.toLowerCase() === "reason"
-          ? "width-15"
-          : ""
+        item.label?.toLowerCase() === "reason"
+        ? "width-15"
+        : ""
         }`}
       onClick={() => clickSort(item)}
       title={item.title}
@@ -356,7 +356,7 @@ const TableHeadItem = ({ item, clickSort, allClick, data,showCheckAll }) => {
           <span></span>
         </label>
       ) : (
-        item.label ==="obj" ? "select" : item.label
+        item.label === "obj" ? "select" : item.label
       )}
     </th>
   );
@@ -523,6 +523,77 @@ const ActionCase = ({ item, column, buttonClick, checkClick, radioClick }) => {
                 </span>
               );
               break;
+
+            case "receive":
+              return (
+                <span key={index} className="inline-block mr-2">
+                  <button
+                    type="button"
+                    className="btn btn_outlined btn_primary cursor-pointer px-2 py-1 whitespace-nowrap"
+                    title="รับเข้า"
+                    onClick={() => buttonClick(Item.event, item)}
+                  >
+                    รับเข้า
+                  </button>
+                </span>
+              );
+
+            case "issue":
+              return (
+                <span key={index} className="inline-block mr-2">
+                  <button
+                    type="button"
+                    className="btn btn_outlined btn_primary cursor-pointer px-2 py-1 whitespace-nowrap"
+                    title="จ่ายออก"
+                    onClick={() => buttonClick(Item.event, item)}
+                  >
+                    จ่ายออก
+                  </button>
+                </span>
+              );
+              // case "issue":
+              //   return (
+              //     <span key={index}>
+              //       <button
+              //         type="button"
+              //         className="btn btn-icon btn_outlined btn_primary mr-1 cursor-pointer"
+              //         title={`${Item.event}`}
+              //         onClick={() => buttonClick(Item.event, item)}
+              //       >
+              //         <span className="la la-upload text-xl leading-none" />
+              //       </button>
+              //     </span>
+              //   );
+              break;
+            // case "receive":
+            //   return (
+            //     <span key={index}>
+            //       <button
+            //         type="button"
+            //         className="btn btn-icon btn_outlined btn_primary mr-1 cursor-pointer"
+            //         title={`${Item.event}`}
+            //         onClick={() => buttonClick(Item.event, item)}
+            //       >
+            //         <span className="la la-download text-xl leading-none" />
+            //       </button>
+            //     </span>
+            //   );
+            //   break;
+
+            // case "receive":
+            //   return (
+            //     <span key={index}>
+            //       <button
+            //         type="button"
+            //         className="btn btn-icon btn_outlined btn_primary mr-1 cursor-pointer"
+            //         title="รับเข้า"
+            //         onClick={() => buttonClick(Item.event, item)}
+            //       >
+            //         รับเข้า
+            //       </button>
+            //     </span>
+            //   );
+
           }
 
           //return (

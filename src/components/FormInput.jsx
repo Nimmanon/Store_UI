@@ -68,8 +68,8 @@ const FormInput = (props) => {
               pattern == "email"
                 ? /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
                 : pattern == "phone"
-                ? /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/
-                : "",
+                  ? /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/
+                  : "",
             minLength: minLength,
             maxLength: maxLength,
             min: min,
@@ -78,9 +78,8 @@ const FormInput = (props) => {
           autoComplete="off"
           min={min}
           type={type}
-          className={`form-control  ${error ? "is-invalid" : ""} ${
-            readonly ? "readOnly" : "bg-yellow-100"
-          }`}
+          className={`form-control  ${error ? "is-invalid" : ""} ${readonly ? "readOnly" : "bg-yellow-100"
+            }`}
           placeholder={
             placeholder === undefined ? `Input ` + label : placeholder
           }
@@ -102,8 +101,8 @@ const FormInput = (props) => {
               pattern == "email"
                 ? /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
                 : pattern == "phone"
-                ? /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/
-                : "",
+                  ? /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/
+                  : "",
             minLength: minLength,
             maxLength: maxLength,
             min: min,
@@ -112,9 +111,8 @@ const FormInput = (props) => {
           autoComplete="off"
           min={min}
           type={type}
-          className={`form-control  ${error ? "is-invalid" : ""} ${
-            readonly ? "readOnly" : "bg-yellow-100"
-          }`}
+          className={`form-control  ${error ? "is-invalid" : ""} ${readonly ? "readOnly" : "bg-yellow-100"
+            }`}
           placeholder={
             placeholder === undefined ? `Input ` + label : placeholder
           }

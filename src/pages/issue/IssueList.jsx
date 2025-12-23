@@ -18,7 +18,7 @@ const IssueList = () => {
   const [action, setAction] = useState("");
   const [exists, setExists] = useState(false);
   // const [isSaving, setIsSaving] = useState(false);
-    
+
   //from
   const [dataselected, setDataSelected] = useState();
   const [search, setSearch] = useState();
@@ -177,7 +177,7 @@ const IssueList = () => {
 
   const handledUpdateChange = (newItem) => {
     if (exists) return;
-    APIService.Put("Receive/Put", newItem)
+    APIService.Put("Issue/Put", newItem)
       .then((res) => {
         if (res.status !== 200) return;
         //remove old array
@@ -193,7 +193,7 @@ const IssueList = () => {
 
   const handledDeleteItem = () => {
     var credential = { Id: content.Id };
-    APIService.Post("Receive/Delete", credential)
+    APIService.Post("Issue/Delete", credential)
       .then((res) => {
         if (res.status !== 200) return;
         //remove array
@@ -215,7 +215,7 @@ const IssueList = () => {
         onAddNew={addNew}
         onSearchChange={getSearch}
         showAdd={true}
-        showExport={false}
+        showExport={true}
         showSearch={true}
         setViewStyle={"list"}
         data={dataTable}

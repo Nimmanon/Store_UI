@@ -97,15 +97,10 @@ const ReceiveList = () => {
             format: "",
             action: [
                 // { event: "edit", display: true },
-                { event: "delete", display: true },
+                // { event: "delete", display: true },
             ],
         },
     ];
-
-    const setInitial = () => {
-        if (auth === undefined) return;
-        setUserId(atob(auth.Id));
-    };
 
     const addNew = () => {
         navigate("/receive/new");
@@ -116,7 +111,7 @@ const ReceiveList = () => {
         if (effectRan.current == false) {
             document.title = "Receive";
             getData();
-            setInitial();
+            calculateStock();
             return () => (effectRan.current = true);
         }
     }, []);
@@ -133,6 +128,13 @@ const ReceiveList = () => {
                 setIsLoading(false);
                 //console.log("Issue Get = >", res.data);
             })
+            .catch((err) => console.log(err));
+    };
+
+    const calculateStock = () => {
+        //ถ้าเริ่มเดือนใหม่ ให้ยกยอดจากเดือนก่อนหน้า
+        APIService.getAll("Stock/BroughtForward")
+            .then((res) => { })
             .catch((err) => console.log(err));
     };
 
@@ -159,51 +161,51 @@ const ReceiveList = () => {
         setAction(action);
     };
 
-    const handledSaveChange = (newItem) => {
-        console.log("handledSaveChange Issue =>", newItem);
-        newItem.WorkOrder = Number(newItem.WorkOrder);
-        newItem.Qty = Number(newItem.Qty);
-        if (exists) return;
-        APIService.Post("Receive/Post", newItem)
-            .then((res) => {
-                if (res.status !== 200) return;
-                setDataList((prevItem) => {
-                    return [res.data, ...prevItem];
-                });
-                handledCancelClick();
-            })
-            .catch((err) => console.log(err));
-    };
+    // const handledSaveChange = (newItem) => {
+    //     console.log("handledSaveChange Issue =>", newItem);
+    //     newItem.WorkOrder = Number(newItem.WorkOrder);
+    //     newItem.Qty = Number(newItem.Qty);
+    //     if (exists) return;
+    //     APIService.Post("Receive/Post", newItem)
+    //         .then((res) => {
+    //             if (res.status !== 200) return;
+    //             setDataList((prevItem) => {
+    //                 return [res.data, ...prevItem];
+    //             });
+    //             handledCancelClick();
+    //         })
+    //         .catch((err) => console.log(err));
+    // };
 
 
-    const handledUpdateChange = (newItem) => {
-        if (exists) return;
-        APIService.Put("Receive/Put", newItem)
-            .then((res) => {
-                if (res.status !== 200) return;
-                //remove old array
-                let items = dataList.filter((item) => item.Id !== content.Id);
-                setDataList(items);
-                setDataList((prevItem) => {
-                    return [res.data, ...prevItem];
-                });
-                handledCancelClick();
-            })
-            .catch((err) => console.log(err));
-    };
+    // const handledUpdateChange = (newItem) => {
+    //     if (exists) return;
+    //     APIService.Put("Receive/Put", newItem)
+    //         .then((res) => {
+    //             if (res.status !== 200) return;
+    //             //remove old array
+    //             let items = dataList.filter((item) => item.Id !== content.Id);
+    //             setDataList(items);
+    //             setDataList((prevItem) => {
+    //                 return [res.data, ...prevItem];
+    //             });
+    //             handledCancelClick();
+    //         })
+    //         .catch((err) => console.log(err));
+    // };
 
-    const handledDeleteItem = () => {
-        var credential = { Id: content.Id };
-        APIService.Post("Receive/Delete", credential)
-            .then((res) => {
-                if (res.status !== 200) return;
-                //remove array
-                let items = dataList.filter((item) => item.Id !== content.Id);
-                setDataList(items);
-                handledCancelClick();
-            })
-            .catch((err) => console.log(err));
-    };
+    // const handledDeleteItem = () => {
+    //     var credential = { Id: content.Id };
+    //     APIService.Post("Receive/Delete", credential)
+    //         .then((res) => {
+    //             if (res.status !== 200) return;
+    //             //remove array
+    //             let items = dataList.filter((item) => item.Id !== content.Id);
+    //             setDataList(items);
+    //             handledCancelClick();
+    //         })
+    //         .catch((err) => console.log(err));
+    // };
 
     const handledCancelClick = () => {
         setShow(false);
@@ -216,7 +218,7 @@ const ReceiveList = () => {
                 onAddNew={addNew}
                 onSearchChange={getSearch}
                 showAdd={true}
-                showExport={false}
+                showExport={true}
                 showSearch={true}
                 setViewStyle={"list"}
                 data={dataTable}

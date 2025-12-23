@@ -23,6 +23,7 @@ import IssueList from "./pages/issue/IssueList";
 import IssueForm from "./pages/issue/IssueForm";
 import ReceiveList from "./pages/receive/ReceiveList";
 import ReceiveForm from "./pages/receive/ReceiveForm";
+import ReportStock from "./pages/report/ReportStock";
 
 
 function App() {
@@ -60,6 +61,8 @@ function App() {
           <Route path="prepareorderlineas" element={<PrepareOrderLineAs />} />
           <Route path="reportreceive" element={<ReportReceive />} />
           <Route path="reportissue" element={<ReportIssue />} />
+          <Route path="reportstock" element={<ReportStock />} />
+          
 
 
           <Route path="Master" element={<MasterList />} />

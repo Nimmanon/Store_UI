@@ -3,9 +3,8 @@ import { useSelector } from "react-redux";
 import APIService from "../../services/APIService";
 import Panel from "../../components/Panel";
 import Table from "../../components/Table";
-
-const ReportReceive = () => {
-
+import { useNavigate } from "react-router-dom";
+const ReportStock = () => {
     //table
     const [dataList, setDataList] = useState([]);
     const [dataTable, setDataTable] = useState([]);
@@ -14,7 +13,6 @@ const ReportReceive = () => {
     //modal
     const [show, setShow] = useState(false);
     const [content, setContent] = useState({ Id: 0, Name: "" });
-    const [action, setAction] = useState("");
     const [exists, setExists] = useState(false);
 
     //from
@@ -27,32 +25,54 @@ const ReportReceive = () => {
     const [auth, setAuth] = useState(useSelector((state) => state.auth));
     const [userId, setUserId] = useState();
 
-    const columnTable = [
+    const navigate = useNavigate();
+    const [action, setAction] = useState("");
 
+    const columnTable = [
+        // {
+        //     label: "Employee Code",
+        //     key: "EmployeeCode",
+        //     align: "left",
+        //     format: "string",
+        //     export: true,
+        // },
         {
-            label: "Employee Code",
-            key: "EmployeeCode",
-            align: "left",
-            format: "string",
-            export: true,
-        },
-        {
-            label: "Product Code",
+            label: "Product",
             key: "Product",
             align: "left",
             format: "string",
             export: true,
         },
-        // {
-        //     label: "Location",
-        //     key: "Location",
-        //     align: "left",
-        //     format: "string",
-        //     type: "object",
-        //     sort: "Name",
-        //     export: true,
-        // },
-
+        {
+            label: "Location",
+            key: "LocationName",
+            align: "left",
+            format: "string",
+            // type: "object",
+            // sort: "Name",
+            export: true,
+        },
+        {
+            label: "รับเข้า",
+            key: "ReceiveQty",
+            align: "left",
+            format: "string",
+            export: true,
+        },
+        {
+            label: "จ่ายออก",
+            key: "IssueQty",
+            align: "left",
+            format: "string",
+            export: true,
+        },
+         {
+            label: "คงเหลือ",
+            key: "OnHand",
+            align: "left",
+            format: "string",
+            export: true,
+        },
         // {
         //     label: "Group",
         //     key: "Group",
@@ -71,32 +91,34 @@ const ReportReceive = () => {
         //     sort: "Name",
         //     export: true,
         // },
-        {
-            label: "Qty",
-            key: "Qty",
-            align: "left",
-            format: "string",
-            export: true,
-        },
 
-        {
-            label: "Receive Date",
-            key: "InputDate",
-            align: "left",
-            format: "shotdatetime",
-            export: true,
-        },
         // {
-        //   label: "",
-        //   key: "button",
-        //   align: "center",
-        //   format: "",
-        //   action: [
-        //     { event: "view", display: true },
-        //     // { event: "print", display: "IsActive" }, // ตรวจสอบค่า IsActive
-        //   ],
+        //     label: "Bf Qty",
+        //     key: "BfQty",
+        //     align: "left",
+        //     format: "string",
+        //     export: true,
         // },
+
+        // {
+        //     label: "Receive Date",
+        //     key: "InputDate",
+        //     align: "left",
+        //     format: "shotdatetime",
+        //     export: true,
+        // },
+        {
+            label: "",
+            key: "button",
+            align: "center",
+            format: "",
+            action: [
+                { event: "receive", display: true },
+                { event: "issue", display: "IsActive" }, // ตรวจสอบค่า IsActive
+            ],
+        },
     ];
+
 
     const setInitial = () => {
         if (auth === undefined) return;
@@ -105,7 +127,7 @@ const ReportReceive = () => {
 
     useEffect(() => {
         if (effectRan.current == false) {
-            document.title = "Report Receive";
+            document.title = "Report Stock";
             getData();
             setInitial();
             return () => (effectRan.current = true);
@@ -118,7 +140,7 @@ const ReportReceive = () => {
 
     const getData = () => {
         setIsLoading(true);
-        APIService.getAll("Receive/Get")
+        APIService.getAll("Stock/GetOnHand")
             .then((res) => {
                 setDataList(res.data);
                 setIsLoading(false);
@@ -140,13 +162,33 @@ const ReportReceive = () => {
         }
     };
 
-    const buttonTableClick = (action, value) => {
-        if (!action) return;
+    // const buttonTableClick = (action, value) => {
+    //     if (!action) return;
+    //     setShow(true);
+    //     setContent({ Id: value.Id, Name: value.Name });
+    //     setDataSelected(value);
+    //     setAction(action);
+    // };
 
-        setShow(true);
-        setContent({ Id: value.Id, Name: value.Name });
-        setDataSelected(value);
-        setAction(action);
+
+    const buttonTableClick = (event, row) => {
+        switch (event) {
+            case "receive":
+                setAction("new");
+                // ถ้าอยากส่งข้อมูลแถวไปด้วย ใช้ state
+                navigate("/receive/new", { state: { item: row } });
+                console.log("item:row",row);
+                break;
+
+            case "issue":
+                setAction("new");
+                // ถ้าอยากส่งข้อมูลแถวไปด้วย ใช้ state
+                navigate("/issue/new", { state: { item: row } });
+                break;
+
+            default:
+                break;
+        }
     };
 
     return (
@@ -178,4 +220,4 @@ const ReportReceive = () => {
     )
 }
 
-export default ReportReceive
+export default ReportStock
