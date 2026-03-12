@@ -18,6 +18,8 @@ const ReceiveForm = () => {
   const [exists, setExists] = useState(false);
   const [issubmit, setIsSubmit] = useState(false);
 
+  const [productError, setProductError] = useState("");
+
 
 
 
@@ -62,6 +64,18 @@ const ReceiveForm = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (!product) return;
+
+    const normalized = product.trim().toUpperCase();
+    const limited = normalized.slice(0, 15);
+
+    if (limited !== product) {
+      setProduct(limited);
+      setValue("Product", limited, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [product, setValue]);
+
   const handleSaveClick = (newItem) => {
     setIsSubmit(true);
     newItem.Product = String(newItem.Product);
@@ -98,6 +112,7 @@ const ReceiveForm = () => {
     navigate("/reportstock");
     // setAction("list");
   };
+  
   //อันนี้ใช้ได้ปกติ
   // const handleProductChange = (prod) => {
   //   setValue("Location", ([]));
@@ -110,35 +125,73 @@ const ReceiveForm = () => {
   //   console.log("Product =>", prod);
   // };
 
+  // const handleProductChange = (prodRaw) => {
+  //   const raw = (prodRaw ?? "").trim();
+  //   if (!raw) return;
+
+  //   // ✅ แยก Product | Qty
+  //   const [p, q] = raw.split("|");
+  //   const productCode = (p ?? "").trim();
+  //   const qtyValue = q !== undefined ? Number(String(q).trim()) : null;
+
+  //   // ✅ set product ที่ถูกตัดแล้ว
+  //   setProduct(productCode);
+  //   setValue("Product", productCode, { shouldValidate: true, shouldDirty: true });
+
+  //   // ✅ ถ้ามี qty หลัง | ให้ใส่ลง Qty
+  //   if (qtyValue !== null && Number.isFinite(qtyValue)) {
+  //     setValue("Qty", qtyValue, { shouldValidate: true, shouldDirty: true });
+  //     setQty(qtyValue); // ถ้าคุณยังใช้ state qty อยู่
+  //   } else {
+  //     setValue("Qty", "", { shouldValidate: true });
+  //     setQty(0);
+  //   }
+
+  //   // ✅ reset location และโหลด location ตาม productCode
+  //   setValue("Location", null);
+  //   setLocation(null);
+  //   getLocation(productCode);
+  //   console.log("Product =>", productCode);
+  //   //console.log("Product =>", productCode, "Qty =>", qtyValue);
+  // };
+
   const handleProductChange = (prodRaw) => {
+    setProductError("");
+
     const raw = (prodRaw ?? "").trim();
     if (!raw) return;
 
-    // ✅ แยก Product | Qty
     const [p, q] = raw.split("|");
-    const productCode = (p ?? "").trim();
-    const qtyValue = q !== undefined ? Number(String(q).trim()) : null;
 
-    // ✅ set product ที่ถูกตัดแล้ว
+    const productCode = (p ?? "").trim().toUpperCase();
+
+    // ✅ เช็คเกิน 15
+    if (productCode.length > 15) {
+      setProductError("รูปแบบ Product เกิน 15 ตัวอักษร.");
+      return; // ❗หยุดเลย ไม่ set ค่า
+    }
+
+    // ✅ เช็ค format (ถ้าต้องการ)
+    const ok = /^[A-Z0-9_-]+$/.test(productCode);
+    if (!ok) {
+      setProductError("รูปแบบ Product ไม่ถูกต้อง.");
+      return;
+    }
+
+    // ✅ ผ่านแล้วค่อย set
     setProduct(productCode);
     setValue("Product", productCode, { shouldValidate: true, shouldDirty: true });
 
-    // ✅ ถ้ามี qty หลัง | ให้ใส่ลง Qty
+    const qtyValue = q !== undefined ? Number(String(q).trim()) : null;
+
     if (qtyValue !== null && Number.isFinite(qtyValue)) {
       setValue("Qty", qtyValue, { shouldValidate: true, shouldDirty: true });
-      setQty(qtyValue); // ถ้าคุณยังใช้ state qty อยู่
-    } else {
-      setValue("Qty", "", { shouldValidate: true });
-      setQty(0);
+      setQty(qtyValue);
     }
 
-    // ✅ reset location และโหลด location ตาม productCode
     setValue("Location", null);
     setLocation(null);
-
     getLocation(productCode);
-
-    console.log("Product =>", productCode, "Qty =>", qtyValue);
   };
 
 
@@ -240,6 +293,11 @@ const ReceiveForm = () => {
                 error={errors.Product}
                 required
               />
+              {productError && (
+                <small className="block mt-2 invalid-feedback">
+                  {productError}
+                </small>
+              )}
               <Select
                 list={locationList}
                 onSelectItem={onSelectItem}
@@ -262,19 +320,21 @@ const ReceiveForm = () => {
                 onChange={(e) => {
                   setQty(e.target.value);
                 }}
-                // max={Number(qty)}
-                // min={1}
+              // max={Number(qty)}
+              // min={1}
               />
 
               <div className="pt-3 flex justify-center gap-2">
-                {Number(qty) > 0 && (
+                {/* {Number(qty) > 0 && (
+                  <button type="submit" className="btn btn_primary uppercase">
+                    บันทึกข้อมูล
+                  </button>
+                )} */}
+                {Number(qty) > 0 && !productError && (
                   <button type="submit" className="btn btn_primary uppercase">
                     บันทึกข้อมูล
                   </button>
                 )}
-                {/* <button type="submit" className="btn btn_primary uppercase" disabled={issubmit}>
-                  บันทึกข้อมูล
-                </button> */}
                 <button
                   type="button"
                   className="btn btn_outlined btn_info uppercase"

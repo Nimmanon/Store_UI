@@ -144,7 +144,7 @@ const ReportStock = () => {
             .then((res) => {
                 setDataList(res.data);
                 setIsLoading(false);
-                //console.log("Issue Get = >", res.data);
+                console.log("Issue Get = >", res.data);
             })
             .catch((err) => console.log(err));
     };

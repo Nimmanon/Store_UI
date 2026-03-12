@@ -83,7 +83,7 @@ const IssueList = () => {
     },
 
     {
-      label: "Receive Date",
+      label: "Issue Date",
       key: "InputDate",
       align: "left",
       format: "shotdatetime",
@@ -220,10 +220,10 @@ const IssueList = () => {
         setViewStyle={"list"}
         data={dataTable}
         headExport={columnTable}
-        name={"Receive"}
-        page={"Receive"}
+        name={"Issue"}
+        page={"Issue"}
         home={"Master"}
-        title={"Receive"}
+        title={"Issue"}
         showBreadcrumb={false}
       />
 

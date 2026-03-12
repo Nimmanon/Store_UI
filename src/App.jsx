@@ -38,7 +38,8 @@ function App() {
         </Route>
         {/* <Route path="/" element={<PrivateRoute />}> */}
         <Route path="/" element={<Main />}>
-          <Route path="" element={<Receive />} />
+         <Route index element={<ReceiveList />} />
+          {/* <Route path="" element={<Receive />} /> */}
 
           {/* <Route path="receive" element={<Receive />} /> */}
           <Route path="receive" element={<Receive />}>

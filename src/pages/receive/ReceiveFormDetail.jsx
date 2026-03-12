@@ -25,18 +25,13 @@ const ReceiveFormDetail = ({ onAddClick, }) => {
 
     const handleAddClick = () => {        
         var data = {};
-        data.ProductCode = productcode;
-        // data.WeightBefore = Number(weightBefore);
-        // data.WeightAfter = Number(weightAfter);
-        // data.Quantity = Number(quantity);
-        // data.UnitPrice = Number(unitPrice);
-        // data.Total = Number(total);
+        data.ProductCode = productcode;      
         onAddClick(data);
         //console.log("data =>", data);
-        console.log("handleAddClick");
-        //clearForm();
-        // setDisable(true);
+        console.log("handleAddClick");       
     };
+
+    
 
     // const handleClearClick = () => {
     //     //console.log("handleClearClick");
